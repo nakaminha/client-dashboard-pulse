@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +13,17 @@ export interface Cliente {
   telefone: string;
   empresa: string;
   status: 'Ativo' | 'Inativo' | 'Pendente';
+  usuario: string;
+  senha: string;
+  whatsapp: string;
+  categoria: string;
+  mac: string;
+  notasCliente: string;
+  enviarNotificacoes: string;
+  cpfCnpj: string;
+  endereco: string;
+  temCpfCnpj: boolean;
+  temEndereco: boolean;
 }
 
 const clientes: Cliente[] = [
@@ -24,6 +34,17 @@ const clientes: Cliente[] = [
     telefone: '(11) 98765-4321',
     empresa: 'Tech Solutions',
     status: 'Ativo',
+    usuario: 'joaosilva',
+    senha: 'senha123',
+    whatsapp: '11987654321',
+    categoria: 'premium',
+    mac: '',
+    notasCliente: '',
+    enviarNotificacoes: 'Email',
+    cpfCnpj: '',
+    endereco: '',
+    temCpfCnpj: false,
+    temEndereco: false
   },
   {
     id: '2',
@@ -32,6 +53,17 @@ const clientes: Cliente[] = [
     telefone: '(21) 98765-4321',
     empresa: 'Design Studio',
     status: 'Ativo',
+    usuario: 'mariaoliveira',
+    senha: 'senha456',
+    whatsapp: '21987654321',
+    categoria: 'basic',
+    mac: '',
+    notasCliente: '',
+    enviarNotificacoes: 'SMS',
+    cpfCnpj: '',
+    endereco: '',
+    temCpfCnpj: false,
+    temEndereco: false
   },
   {
     id: '3',
@@ -40,6 +72,17 @@ const clientes: Cliente[] = [
     telefone: '(31) 98765-4321',
     empresa: 'Marketing Group',
     status: 'Inativo',
+    usuario: 'carlospereira',
+    senha: 'senha789',
+    whatsapp: '31987654321',
+    categoria: 'premium',
+    mac: '',
+    notasCliente: '',
+    enviarNotificacoes: 'Email',
+    cpfCnpj: '',
+    endereco: '',
+    temCpfCnpj: false,
+    temEndereco: false
   },
   {
     id: '4',
@@ -48,6 +91,17 @@ const clientes: Cliente[] = [
     telefone: '(41) 98765-4321',
     empresa: 'Sales Corp',
     status: 'Pendente',
+    usuario: 'anasantos',
+    senha: 'senha101',
+    whatsapp: '41987654321',
+    categoria: 'basic',
+    mac: '',
+    notasCliente: '',
+    enviarNotificacoes: 'SMS',
+    cpfCnpj: '',
+    endereco: '',
+    temCpfCnpj: false,
+    temEndereco: false
   },
   {
     id: '5',
@@ -56,6 +110,17 @@ const clientes: Cliente[] = [
     telefone: '(51) 98765-4321',
     empresa: 'Finance Ltd',
     status: 'Ativo',
+    usuario: 'pedrocosta',
+    senha: 'senha121',
+    whatsapp: '51987654321',
+    categoria: 'premium',
+    mac: '',
+    notasCliente: '',
+    enviarNotificacoes: 'Email',
+    cpfCnpj: '',
+    endereco: '',
+    temCpfCnpj: false,
+    temEndereco: false
   },
 ];
 
@@ -136,7 +201,7 @@ const ClientesList = () => {
               Adicionar Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
               <DialogTitle>
                 {clienteParaEditar ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
