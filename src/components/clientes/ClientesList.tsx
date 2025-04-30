@@ -1,9 +1,13 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Import, Export, Plus, Search } from 'lucide-react';
+import ClientesFilters from './ClientesFilters';
+import ClientesTable from './ClientesTable';
+import ClientesPagination from './ClientesPagination';
 import ClienteForm from './ClienteForm';
 
 export interface Cliente {
@@ -24,103 +28,31 @@ export interface Cliente {
   endereco: string;
   temCpfCnpj: boolean;
   temEndereco: boolean;
+  plano?: string;
+  vencimento?: string;
 }
 
 const clientes: Cliente[] = [
   {
     id: '1',
-    nome: 'João Silva',
-    email: 'joao.silva@exemplo.com',
-    telefone: '(11) 98765-4321',
-    empresa: 'Tech Solutions',
+    nome: 'Isaac',
+    email: 'cloverstreamings@gmail.com',
+    telefone: '5585985704035',
+    empresa: 'Clover',
     status: 'Ativo',
-    usuario: 'joaosilva',
+    usuario: 'isaac',
     senha: 'senha123',
-    whatsapp: '11987654321',
-    categoria: 'premium',
-    mac: '',
-    notasCliente: '',
-    enviarNotificacoes: 'Email',
-    cpfCnpj: '',
-    endereco: '',
-    temCpfCnpj: false,
-    temEndereco: false
-  },
-  {
-    id: '2',
-    nome: 'Maria Oliveira',
-    email: 'maria.oliveira@exemplo.com',
-    telefone: '(21) 98765-4321',
-    empresa: 'Design Studio',
-    status: 'Ativo',
-    usuario: 'mariaoliveira',
-    senha: 'senha456',
-    whatsapp: '21987654321',
+    whatsapp: '5585985704035',
     categoria: 'basic',
     mac: '',
     notasCliente: '',
-    enviarNotificacoes: 'SMS',
-    cpfCnpj: '',
-    endereco: '',
-    temCpfCnpj: false,
-    temEndereco: false
-  },
-  {
-    id: '3',
-    nome: 'Carlos Pereira',
-    email: 'carlos.pereira@exemplo.com',
-    telefone: '(31) 98765-4321',
-    empresa: 'Marketing Group',
-    status: 'Inativo',
-    usuario: 'carlospereira',
-    senha: 'senha789',
-    whatsapp: '31987654321',
-    categoria: 'premium',
-    mac: '',
-    notasCliente: '',
     enviarNotificacoes: 'Email',
     cpfCnpj: '',
     endereco: '',
     temCpfCnpj: false,
-    temEndereco: false
-  },
-  {
-    id: '4',
-    nome: 'Ana Santos',
-    email: 'ana.santos@exemplo.com',
-    telefone: '(41) 98765-4321',
-    empresa: 'Sales Corp',
-    status: 'Pendente',
-    usuario: 'anasantos',
-    senha: 'senha101',
-    whatsapp: '41987654321',
-    categoria: 'basic',
-    mac: '',
-    notasCliente: '',
-    enviarNotificacoes: 'SMS',
-    cpfCnpj: '',
-    endereco: '',
-    temCpfCnpj: false,
-    temEndereco: false
-  },
-  {
-    id: '5',
-    nome: 'Pedro Costa',
-    email: 'pedro.costa@exemplo.com',
-    telefone: '(51) 98765-4321',
-    empresa: 'Finance Ltd',
-    status: 'Ativo',
-    usuario: 'pedrocosta',
-    senha: 'senha121',
-    whatsapp: '51987654321',
-    categoria: 'premium',
-    mac: '',
-    notasCliente: '',
-    enviarNotificacoes: 'Email',
-    cpfCnpj: '',
-    endereco: '',
-    temCpfCnpj: false,
-    temEndereco: false
+    temEndereco: false,
+    plano: 'BÁSICO',
+    vencimento: '05/03/2025'
   },
 ];
 
@@ -129,12 +61,27 @@ const ClientesList = () => {
   const [clientesData, setClientesData] = useState<Cliente[]>(clientes);
   const [clienteParaEditar, setClienteParaEditar] = useState<Cliente | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itensPorPagina, setItensPorPagina] = useState(25);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
+  const [planoSelecionado, setPlanoSelecionado] = useState('');
   
-  const filteredClientes = clientesData.filter(cliente => 
-    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.empresa.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClientes = clientesData.filter(cliente => {
+    const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          cliente.telefone.includes(searchTerm);
+    
+    const matchesCategoria = categoriaSelecionada === '' || cliente.categoria === categoriaSelecionada;
+    const matchesPlano = planoSelecionado === '' || cliente.plano === planoSelecionado;
+    
+    return matchesSearch && matchesCategoria && matchesPlano;
+  });
+
+  const totalRegistros = filteredClientes.length;
+  const totalPaginas = Math.ceil(totalRegistros / itensPorPagina);
+  const indiceFinal = paginaAtual * itensPorPagina;
+  const indiceInicial = indiceFinal - itensPorPagina;
+  const clientesPaginados = filteredClientes.slice(indiceInicial, indiceFinal);
 
   const handleSalvarCliente = (cliente: Cliente) => {
     if (cliente.id) {
@@ -173,106 +120,99 @@ const ClientesList = () => {
     setDialogOpen(true);
   };
 
+  const handleChangePagina = (pagina: number) => {
+    setPaginaAtual(pagina);
+  };
+
+  const handleChangeItensPorPagina = (itens: number) => {
+    setItensPorPagina(itens);
+    setPaginaAtual(1);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-        <div className="relative max-w-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <Input
-            className="pl-9 max-w-xs"
-            placeholder="Buscar clientes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col space-y-4">
+        <ClientesFilters 
+          categoriaSelecionada={categoriaSelecionada}
+          setCategoriaSelecionada={setCategoriaSelecionada}
+          planoSelecionado={planoSelecionado}
+          setPlanoSelecionado={setPlanoSelecionado}
+        />
+        
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Mostrar</span>
+            <select 
+              className="border rounded px-2 py-1 text-sm"
+              value={itensPorPagina}
+              onChange={(e) => handleChangeItensPorPagina(Number(e.target.value))}
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span className="text-sm text-gray-500">registros</span>
+          </div>
+          
+          <div className="relative w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              className="pl-9"
+              placeholder="Pesquisar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" className="flex items-center gap-2">
+          <Import className="h-4 w-4" />
+          Importar
+        </Button>
+        
+        <Button variant="outline" className="flex items-center gap-2">
+          <Export className="h-4 w-4" />
+          Exportar
+        </Button>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-azul-600 hover:bg-azul-700" onClick={handleAdicionarCliente}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-                <path d="M12 11v6" />
-                <path d="M9 14h6" />
-              </svg>
-              Adicionar Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>
+          <Button className="bg-purple-500 hover:bg-purple-600" onClick={handleAdicionarCliente}>
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Cliente
+          </Button>
+          <Dialog.Content className="sm:max-w-4xl">
+            <Dialog.Header>
+              <Dialog.Title>
                 {clienteParaEditar ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
-              </DialogTitle>
-            </DialogHeader>
+              </Dialog.Title>
+            </Dialog.Header>
             <ClienteForm 
               cliente={clienteParaEditar} 
               onSalvar={handleSalvarCliente} 
             />
-          </DialogContent>
+          </Dialog.Content>
         </Dialog>
       </div>
 
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="hidden md:table-cell">Telefone</TableHead>
-              <TableHead className="hidden md:table-cell">Empresa</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClientes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
-                  Nenhum cliente encontrado
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredClientes.map((cliente) => (
-                <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{cliente.nome}</TableCell>
-                  <TableCell>{cliente.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">{cliente.telefone}</TableCell>
-                  <TableCell className="hidden md:table-cell">{cliente.empresa}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      cliente.status === 'Ativo' ? 'bg-green-100 text-green-800' : 
-                      cliente.status === 'Inativo' ? 'bg-gray-100 text-gray-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {cliente.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditarCliente(cliente)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        </svg>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleExcluirCliente(cliente.id)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                          <line x1="10" x2="10" y1="11" y2="17" />
-                          <line x1="14" x2="14" y1="11" y2="17" />
-                        </svg>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      <ClientesTable
+        clientes={clientesPaginados}
+        onEdit={handleEditarCliente}
+        onDelete={handleExcluirCliente}
+      />
+      
+      <div className="flex justify-between items-center text-sm text-gray-500">
+        <div>
+          Mostrando {indiceInicial + 1} a {Math.min(indiceFinal, totalRegistros)} de {totalRegistros} entradas (filtrado de {clientesData.length} entradas totais)
+        </div>
+        
+        <ClientesPagination 
+          paginaAtual={paginaAtual}
+          totalPaginas={totalPaginas}
+          onChange={handleChangePagina}
+        />
       </div>
     </div>
   );
