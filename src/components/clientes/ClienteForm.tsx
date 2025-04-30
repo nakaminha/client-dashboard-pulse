@@ -1,12 +1,37 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import FormField from './form/FormField';
-import PhoneField from './form/PhoneField';
-import SelectField from './form/SelectField';
-import TextareaField from './form/TextareaField';
-import ConditionalField from './form/ConditionalField';
-import { ClienteFormProps, estadosIniciais, Cliente } from './form/ClienteFormTypes';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import type { Cliente } from './ClientesList';
+
+interface ClienteFormProps {
+  cliente?: Cliente | null;
+  onSalvar: (cliente: Cliente) => void;
+}
+
+const estadosIniciais = {
+  id: '',
+  nome: '',
+  email: '',
+  telefone: '',
+  empresa: '',
+  status: 'Ativo' as 'Ativo' | 'Inativo' | 'Pendente',
+  usuario: '',
+  senha: '',
+  whatsapp: '',
+  categoria: '',
+  mac: '',
+  notasCliente: '',
+  enviarNotificacoes: 'Nenhuma',
+  cpfCnpj: '',
+  endereco: '',
+  temCpfCnpj: false,
+  temEndereco: false
+};
 
 const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
   const [formData, setFormData] = useState<Cliente>(estadosIniciais);
@@ -46,19 +71,6 @@ const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
     onSalvar(formData);
   };
 
-  const categoriaOptions = [
-    { value: 'premium', label: 'Premium' },
-    { value: 'regular', label: 'Regular' },
-    { value: 'basico', label: 'Básico' }
-  ];
-
-  const notificacoesOptions = [
-    { value: 'Nenhuma', label: 'Nenhuma' },
-    { value: 'Email', label: 'Email' },
-    { value: 'WhatsApp', label: 'WhatsApp' },
-    { value: 'Ambos', label: 'Ambos' }
-  ];
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex justify-start mb-4">
@@ -76,115 +88,199 @@ const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          id="nome"
-          name="nome"
-          label="Nome:"
-          value={formData.nome}
-          onChange={handleChange}
-          required
-        />
+        <div className="space-y-2">
+          <Label htmlFor="nome">Nome:</Label>
+          <Input
+            id="nome"
+            name="nome"
+            value={formData.nome}
+            onChange={handleChange}
+            required
+          />
+        </div>
         
-        <FormField
-          id="email"
-          name="email"
-          label="Email:"
-          value={formData.email}
-          onChange={handleChange}
-          type="email"
-          required
-        />
+        <div className="space-y-2">
+          <Label htmlFor="email">Email:</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
         
-        <FormField
-          id="usuario"
-          name="usuario"
-          label="Usuário:"
-          value={formData.usuario}
-          onChange={handleChange}
-          required
-          rightAddon="Para acessar a Área do Cliente"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="usuario">Usuário:</Label>
+          <div className="relative">
+            <Input
+              id="usuario"
+              name="usuario"
+              value={formData.usuario}
+              onChange={handleChange}
+              required
+            />
+            <span className="text-xs text-gray-500 absolute right-3 top-3">Para acessar a Área do Cliente</span>
+          </div>
+        </div>
         
-        <FormField
-          id="senha"
-          name="senha"
-          label="Senha:"
-          value={formData.senha}
-          onChange={handleChange}
-          type="password"
-          required
-          rightAddon="Para acessar a Área do Cliente"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="senha">Senha:</Label>
+          <div className="relative">
+            <Input
+              id="senha"
+              name="senha"
+              type="password"
+              value={formData.senha}
+              onChange={handleChange}
+              required
+            />
+            <span className="text-xs text-gray-500 absolute right-3 top-3">Para acessar a Área do Cliente</span>
+          </div>
+        </div>
         
-        <PhoneField
-          id="whatsapp"
-          name="whatsapp"
-          label="WhatsApp:"
-          value={formData.whatsapp}
-          onChange={handleChange}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="whatsapp">WhatsApp:</Label>
+          <div className="flex">
+            <div className="w-20 flex items-center justify-center border rounded-l-md bg-gray-50">
+              <span className="text-sm text-gray-500 flex items-center">
+                <img src="https://flagsapi.com/BR/flat/24.png" alt="Brasil" className="mr-1" /> +55
+              </span>
+            </div>
+            <Input
+              id="whatsapp"
+              name="whatsapp"
+              type="tel"
+              className="rounded-l-none"
+              placeholder="11 96123-4567"
+              value={formData.whatsapp}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
         
-        <SelectField
-          id="categoria"
-          label="Determine a categoria deste cliente:"
-          value={formData.categoria}
-          onValueChange={(value) => handleSelectChange('categoria', value)}
-          options={categoriaOptions}
-          helpText="(Opcional)"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="categoria">
+            Determine a categoria deste cliente:
+            <span className="ml-2 text-xs text-gray-500">(Opcional)</span>
+          </Label>
+          <Select 
+            value={formData.categoria} 
+            onValueChange={(value) => handleSelectChange('categoria', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="premium">Premium</SelectItem>
+              <SelectItem value="regular">Regular</SelectItem>
+              <SelectItem value="basico">Básico</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
-        <SelectField
-          id="enviarNotificacoes"
-          label="Enviar Notificações de Vencimentos:"
-          value={formData.enviarNotificacoes}
-          onValueChange={(value) => handleSelectChange('enviarNotificacoes', value)}
-          options={notificacoesOptions}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="enviarNotificacoes">Enviar Notificações de Vencimentos:</Label>
+          <Select 
+            value={formData.enviarNotificacoes} 
+            onValueChange={(value) => handleSelectChange('enviarNotificacoes', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Nenhuma">Nenhuma</SelectItem>
+              <SelectItem value="Email">Email</SelectItem>
+              <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+              <SelectItem value="Ambos">Ambos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
-        <FormField
-          id="mac"
-          name="mac"
-          label="MAC:"
-          value={formData.mac}
-          onChange={handleChange}
-          placeholder="Opcional"
-          helpText="(Opcional)"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="mac">
+            MAC:
+            <span className="ml-2 text-xs text-gray-500">(Opcional)</span>
+          </Label>
+          <Input
+            id="mac"
+            name="mac"
+            placeholder="Opcional"
+            value={formData.mac}
+            onChange={handleChange}
+          />
+        </div>
       </div>
       
-      <TextareaField
-        id="notasCliente"
-        name="notasCliente"
-        label="Notas para o Cliente:"
-        value={formData.notasCliente}
-        onChange={handleChange}
-        placeholder="Opcional"
-        helpText="(Opcional)"
-        description="A mensagem acima será exibida para o seu cliente na seção destinada a ele (Área do Cliente)."
-      />
+      <div className="space-y-2">
+        <Label htmlFor="notasCliente">
+          Notas para o Cliente:
+          <span className="ml-2 text-xs text-gray-500">(Opcional)</span>
+        </Label>
+        <Textarea
+          id="notasCliente"
+          name="notasCliente"
+          placeholder="Opcional"
+          value={formData.notasCliente}
+          onChange={handleChange}
+          className="min-h-[120px]"
+        />
+        <p className="text-xs text-gray-500">A mensagem acima será exibida para o seu cliente na seção destinada a ele (Área do Cliente).</p>
+      </div>
       
       <div className="space-y-4">
-        <ConditionalField
-          id="cpfCnpj"
-          checkboxLabel="Deseja adicionar CPF/CNPJ?"
-          fieldLabel="CPF/CNPJ"
-          checked={formData.temCpfCnpj}
-          onCheckedChange={(checked) => handleCheckboxChange('temCpfCnpj', checked)}
-          value={formData.cpfCnpj}
-          onChange={handleChange}
-          name="cpfCnpj"
-        />
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="cpfCnpj" 
+            checked={formData.temCpfCnpj} 
+            onCheckedChange={(checked) => handleCheckboxChange('temCpfCnpj', checked as boolean)}
+          />
+          <label
+            htmlFor="cpfCnpj"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Deseja adicionar CPF/CNPJ?
+          </label>
+        </div>
         
-        <ConditionalField
-          id="endereco"
-          checkboxLabel="Deseja adicionar endereço?"
-          fieldLabel="Endereço"
-          checked={formData.temEndereco}
-          onCheckedChange={(checked) => handleCheckboxChange('temEndereco', checked)}
-          value={formData.endereco}
-          onChange={handleChange}
-          name="endereco"
-        />
+        {formData.temCpfCnpj && (
+          <div className="pl-6">
+            <Label htmlFor="cpfCnpj">CPF/CNPJ:</Label>
+            <Input
+              id="cpfCnpjValue"
+              name="cpfCnpj"
+              value={formData.cpfCnpj}
+              onChange={handleChange}
+            />
+          </div>
+        )}
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="endereco" 
+            checked={formData.temEndereco} 
+            onCheckedChange={(checked) => handleCheckboxChange('temEndereco', checked as boolean)}
+          />
+          <label
+            htmlFor="endereco"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Deseja adicionar endereço?
+          </label>
+        </div>
+        
+        {formData.temEndereco && (
+          <div className="pl-6">
+            <Label htmlFor="endereco">Endereço:</Label>
+            <Input
+              id="enderecoValue"
+              name="endereco"
+              value={formData.endereco}
+              onChange={handleChange}
+            />
+          </div>
+        )}
       </div>
       
       <div className="flex justify-start pt-4">

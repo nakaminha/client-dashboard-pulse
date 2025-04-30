@@ -1,14 +1,36 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { FileImport, FileExport, Plus, Search } from 'lucide-react';
+import { Import, Export, Plus, Search } from 'lucide-react';
 import ClientesFilters from './ClientesFilters';
 import ClientesTable from './ClientesTable';
 import ClientesPagination from './ClientesPagination';
 import ClienteForm from './ClienteForm';
-import { Cliente } from './form/ClienteFormTypes';
+
+export interface Cliente {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  empresa: string;
+  status: 'Ativo' | 'Inativo' | 'Pendente';
+  usuario: string;
+  senha: string;
+  whatsapp: string;
+  categoria: string;
+  mac: string;
+  notasCliente: string;
+  enviarNotificacoes: string;
+  cpfCnpj: string;
+  endereco: string;
+  temCpfCnpj: boolean;
+  temEndereco: boolean;
+  plano?: string;
+  vencimento?: string;
+}
 
 const clientes: Cliente[] = [
   {
@@ -147,12 +169,12 @@ const ClientesList = () => {
       
       <div className="flex justify-end space-x-2">
         <Button variant="outline" className="flex items-center gap-2">
-          <FileImport className="h-4 w-4" />
+          <Import className="h-4 w-4" />
           Importar
         </Button>
         
         <Button variant="outline" className="flex items-center gap-2">
-          <FileExport className="h-4 w-4" />
+          <Export className="h-4 w-4" />
           Exportar
         </Button>
         
@@ -161,17 +183,17 @@ const ClientesList = () => {
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Cliente
           </Button>
-          <DialogContent className="sm:max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>
+          <Dialog.Content className="sm:max-w-4xl">
+            <Dialog.Header>
+              <Dialog.Title>
                 {clienteParaEditar ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
-              </DialogTitle>
-            </DialogHeader>
+              </Dialog.Title>
+            </Dialog.Header>
             <ClienteForm 
               cliente={clienteParaEditar} 
               onSalvar={handleSalvarCliente} 
             />
-          </DialogContent>
+          </Dialog.Content>
         </Dialog>
       </div>
 
