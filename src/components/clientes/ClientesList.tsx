@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { FileText, Plus, Search, Upload, Download } from 'lucide-react';
 import ClientesFilters from './ClientesFilters';
@@ -182,17 +183,17 @@ const ClientesList = () => {
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Cliente
           </Button>
-          <Dialog.Content className="sm:max-w-4xl">
-            <Dialog.Header>
-              <Dialog.Title>
+          <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
                 {clienteParaEditar ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
-              </Dialog.Title>
-            </Dialog.Header>
+              </DialogTitle>
+            </DialogHeader>
             <ClienteForm 
               cliente={clienteParaEditar} 
               onSalvar={handleSalvarCliente} 
             />
-          </Dialog.Content>
+          </DialogContent>
         </Dialog>
       </div>
 
