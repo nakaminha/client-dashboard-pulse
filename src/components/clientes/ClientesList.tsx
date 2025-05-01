@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Import, Export, Plus, Search } from 'lucide-react';
+import { FileText, Plus, Search, Upload, Download } from 'lucide-react';
 import ClientesFilters from './ClientesFilters';
 import ClientesTable from './ClientesTable';
 import ClientesPagination from './ClientesPagination';
@@ -169,12 +168,12 @@ const ClientesList = () => {
       
       <div className="flex justify-end space-x-2">
         <Button variant="outline" className="flex items-center gap-2">
-          <Import className="h-4 w-4" />
+          <Upload className="h-4 w-4" />
           Importar
         </Button>
         
         <Button variant="outline" className="flex items-center gap-2">
-          <Export className="h-4 w-4" />
+          <Download className="h-4 w-4" />
           Exportar
         </Button>
         
