@@ -30,7 +30,9 @@ const estadosIniciais = {
   cpfCnpj: '',
   endereco: '',
   temCpfCnpj: false,
-  temEndereco: false
+  temEndereco: false,
+  plano: 'BÁSICO',
+  vencimento: ''
 };
 
 const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
@@ -181,6 +183,35 @@ const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="plano">Plano:</Label>
+          <Select 
+            value={formData.plano || 'BÁSICO'} 
+            onValueChange={(value) => handleSelectChange('plano', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o plano" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BÁSICO">Básico</SelectItem>
+              <SelectItem value="PADRÃO">Padrão</SelectItem>
+              <SelectItem value="PREMIUM">Premium</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="vencimento">Data de Vencimento:</Label>
+          <Input
+            id="vencimento"
+            name="vencimento"
+            type="text"
+            placeholder="DD/MM/AAAA"
+            value={formData.vencimento || ''}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="enviarNotificacoes">Enviar Notificações de Vencimentos:</Label>
           <Select 
             value={formData.enviarNotificacoes} 
@@ -285,7 +316,7 @@ const ClienteForm = ({ cliente, onSalvar }: ClienteFormProps) => {
       
       <div className="flex justify-start pt-4">
         <Button type="submit" className="bg-azul-600 hover:bg-azul-700">
-          Cadastrar Cliente
+          {cliente ? 'Atualizar Cliente' : 'Cadastrar Cliente'}
         </Button>
       </div>
     </form>

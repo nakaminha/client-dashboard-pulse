@@ -23,8 +23,13 @@ interface PlanoFormValues {
   solicitarEndereco: boolean;
 }
 
+interface Plano extends PlanoFormValues {
+  id: string;
+}
+
 const Planos = () => {
   const [criandoPlano, setCriandoPlano] = useState(false);
+  const [planos, setPlanos] = useState<Plano[]>([]);
 
   const form = useForm<PlanoFormValues>({
     defaultValues: {
@@ -40,6 +45,13 @@ const Planos = () => {
   });
 
   const onSubmit = (data: PlanoFormValues) => {
+    const novoPlano: Plano = {
+      ...data,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    
+    setPlanos([...planos, novoPlano]);
+    
     toast({
       title: "Plano criado",
       description: `O plano ${data.nome} foi criado com sucesso.`,
@@ -318,23 +330,45 @@ const Planos = () => {
         </Button>
       </div>
       
-      <Card>
-        <CardContent className="p-6 flex flex-col items-center justify-center h-64">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="w-16 h-16 text-gray-400 mb-4" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-          </svg>
-          <h2 className="text-xl font-medium">Nenhum plano cadastrado</h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 text-center">
-            Você ainda não criou nenhum plano. Clique em "Criar Plano" para começar.
-          </p>
-        </CardContent>
-      </Card>
+      {planos.length > 0 ? (
+        <div className="space-y-4">
+          {planos.map((plano) => (
+            <Card key={plano.id}>
+              <CardContent className="p-6 flex justify-between items-center">
+                <div>
+                  <h3 className="font-medium">{plano.nome}</h3>
+                  <p className="text-sm text-gray-500">{plano.descricao}</p>
+                  <p className="text-sm font-semibold mt-1">R$ {plano.valor} / {plano.tipoCobranca}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm">Editar</Button>
+                  <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                    Deletar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-6 flex flex-col items-center justify-center h-64">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="w-16 h-16 text-gray-400 mb-4" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+            <h2 className="text-xl font-medium">Nenhum plano cadastrado</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 text-center">
+              Você ainda não criou nenhum plano. Clique em "Criar Plano" para começar.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
