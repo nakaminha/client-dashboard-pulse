@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,8 +9,10 @@ import ClientesFilters from './ClientesFilters';
 import ClientesTable from './ClientesTable';
 import ClientesPagination from './ClientesPagination';
 import ClienteForm from './ClienteForm';
+import { clientesService, ClienteSupabase } from '@/lib/supabase';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export interface Cliente {
+export type Cliente = {
   id: string;
   nome: string;
   email: string;
@@ -30,41 +32,66 @@ export interface Cliente {
   temEndereco: boolean;
   plano?: string;
   vencimento?: string;
-}
-
-const clientes: Cliente[] = [
-  {
-    id: '1',
-    nome: 'Isaac',
-    email: 'cloverstreamings@gmail.com',
-    telefone: '5585985704035',
-    empresa: 'Clover',
-    status: 'Ativo',
-    usuario: 'isaac',
-    senha: 'senha123',
-    whatsapp: '5585985704035',
-    categoria: 'basic',
-    mac: '',
-    notasCliente: '',
-    enviarNotificacoes: 'Email',
-    cpfCnpj: '',
-    endereco: '',
-    temCpfCnpj: false,
-    temEndereco: false,
-    plano: 'BÁSICO',
-    vencimento: '05/03/2025'
-  },
-];
+};
 
 const ClientesList = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [clientesData, setClientesData] = useState<Cliente[]>(clientes);
   const [clienteParaEditar, setClienteParaEditar] = useState<Cliente | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itensPorPagina, setItensPorPagina] = useState(25);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('todos');
   const [planoSelecionado, setPlanoSelecionado] = useState('todos');
+  
+  const queryClient = useQueryClient();
+  
+  // Buscar clientes do Supabase
+  const { data: clientesData = [], isLoading, isError } = useQuery({
+    queryKey: ['clientes'],
+    queryFn: clientesService.getAll
+  });
+  
+  // Mutation para adicionar cliente
+  const adicionarClienteMutation = useMutation({
+    mutationFn: (cliente: ClienteSupabase) => clientesService.create(cliente),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      toast.success('Cliente adicionado com sucesso!');
+      setDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Erro ao adicionar cliente');
+      console.error(error);
+    }
+  });
+  
+  // Mutation para atualizar cliente
+  const atualizarClienteMutation = useMutation({
+    mutationFn: ({ id, cliente }: { id: string, cliente: Partial<ClienteSupabase> }) => 
+      clientesService.update(id, cliente),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      toast.success('Cliente atualizado com sucesso!');
+      setDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar cliente');
+      console.error(error);
+    }
+  });
+  
+  // Mutation para excluir cliente
+  const excluirClienteMutation = useMutation({
+    mutationFn: (id: string) => clientesService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      toast.success('Cliente removido com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao remover cliente');
+      console.error(error);
+    }
+  });
   
   const filteredClientes = clientesData.filter(cliente => {
     const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -86,27 +113,17 @@ const ClientesList = () => {
   const handleSalvarCliente = (cliente: Cliente) => {
     if (cliente.id) {
       // Atualizar cliente existente
-      setClientesData(prev => 
-        prev.map(c => c.id === cliente.id ? cliente : c)
-      );
-      toast.success('Cliente atualizado com sucesso!');
+      const { id, ...dadosCliente } = cliente;
+      atualizarClienteMutation.mutate({ id, cliente: dadosCliente });
     } else {
       // Adicionar novo cliente
-      const novoCliente = {
-        ...cliente,
-        id: Math.random().toString(36).substring(2, 9),
-      };
-      setClientesData(prev => [novoCliente, ...prev]);
-      toast.success('Cliente adicionado com sucesso!');
+      adicionarClienteMutation.mutate(cliente as ClienteSupabase);
     }
-    setDialogOpen(false);
-    setClienteParaEditar(null);
   };
 
   const handleExcluirCliente = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
-      setClientesData(prev => prev.filter(cliente => cliente.id !== id));
-      toast.success('Cliente removido com sucesso!');
+      excluirClienteMutation.mutate(id);
     }
   };
 
@@ -131,6 +148,14 @@ const ClientesList = () => {
 
   return (
     <div className="space-y-4">
+      {isLoading && <div className="text-center p-4">Carregando clientes...</div>}
+      
+      {isError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
+          Erro ao carregar clientes. Por favor, tente novamente mais tarde.
+        </div>
+      )}
+      
       <div className="flex flex-col space-y-4">
         <ClientesFilters 
           categoriaSelecionada={categoriaSelecionada}

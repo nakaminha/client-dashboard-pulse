@@ -10,7 +10,9 @@ import { useForm } from 'react-hook-form';
 import { ChevronDown, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { planosService, PlanoSupabase } from '@/lib/supabase';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface PlanoFormValues {
   nome: string;
@@ -29,7 +31,38 @@ interface Plano extends PlanoFormValues {
 
 const Planos = () => {
   const [criandoPlano, setCriandoPlano] = useState(false);
-  const [planos, setPlanos] = useState<Plano[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: planos = [], isLoading } = useQuery({
+    queryKey: ['planos'],
+    queryFn: planosService.getAll,
+  });
+
+  const criarPlanoMutation = useMutation({
+    mutationFn: (plano: PlanoSupabase) => planosService.create(plano),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      toast.success('Plano criado com sucesso!');
+      form.reset();
+      setCriandoPlano(false);
+    },
+    onError: (error) => {
+      toast.error('Erro ao criar o plano');
+      console.error(error);
+    },
+  });
+
+  const deletarPlanoMutation = useMutation({
+    mutationFn: (id: string) => planosService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      toast.success('Plano removido com sucesso!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao remover o plano');
+      console.error(error);
+    },
+  });
 
   const form = useForm<PlanoFormValues>({
     defaultValues: {
@@ -45,20 +78,13 @@ const Planos = () => {
   });
 
   const onSubmit = (data: PlanoFormValues) => {
-    const novoPlano: Plano = {
-      ...data,
-      id: Math.random().toString(36).substring(2, 9),
-    };
-    
-    setPlanos([...planos, novoPlano]);
-    
-    toast({
-      title: "Plano criado",
-      description: `O plano ${data.nome} foi criado com sucesso.`,
-    });
-    
-    form.reset();
-    setCriandoPlano(false);
+    criarPlanoMutation.mutate(data as PlanoSupabase);
+  };
+
+  const handleDeletarPlano = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este plano?')) {
+      deletarPlanoMutation.mutate(id);
+    }
   };
 
   if (criandoPlano) {
@@ -297,8 +323,9 @@ const Planos = () => {
                     type="button" 
                     onClick={form.handleSubmit(onSubmit)}
                     className="w-full mt-6 bg-azul-600 hover:bg-azul-700"
+                    disabled={criarPlanoMutation.isPending}
                   >
-                    Criar Plano
+                    {criarPlanoMutation.isPending ? 'Criando...' : 'Criar Plano'}
                   </Button>
                 </div>
               </CardContent>
@@ -330,7 +357,13 @@ const Planos = () => {
         </Button>
       </div>
       
-      {planos.length > 0 ? (
+      {isLoading && (
+        <div className="text-center p-4">
+          Carregando planos...
+        </div>
+      )}
+      
+      {!isLoading && planos.length > 0 ? (
         <div className="space-y-4">
           {planos.map((plano) => (
             <Card key={plano.id}>
@@ -342,7 +375,12 @@ const Planos = () => {
                 </div>
                 <div className="flex space-x-2">
                   <Button variant="outline" size="sm">Editar</Button>
-                  <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-500 border-red-200 hover:bg-red-50"
+                    onClick={() => handleDeletarPlano(plano.id as string)}
+                  >
                     Deletar
                   </Button>
                 </div>
@@ -350,7 +388,7 @@ const Planos = () => {
             </Card>
           ))}
         </div>
-      ) : (
+      ) : !isLoading ? (
         <Card>
           <CardContent className="p-6 flex flex-col items-center justify-center h-64">
             <svg 
@@ -368,7 +406,7 @@ const Planos = () => {
             </p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 };
