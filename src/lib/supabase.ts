@@ -1,15 +1,27 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Inicializa o cliente Supabase usando as variáveis de ambiente
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a placeholder client if URL is not available
+// This prevents the app from crashing during development
+export const supabase = supabaseUrl 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : {
+      from: () => ({
+        select: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
+        insert: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        update: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        delete: () => ({ error: { message: 'Supabase não configurado' } }),
+        eq: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+      }),
+    };
 
 // Tipos para as tabelas do Supabase
 export type ClienteSupabase = {
-  id?: string;
+  id: string;  // Changed from optional to required to match Cliente type
   nome: string;
   email: string;
   telefone: string;
@@ -33,7 +45,7 @@ export type ClienteSupabase = {
 };
 
 export type PlanoSupabase = {
-  id?: string;
+  id: string;  // Changed from optional to required
   nome: string;
   descricao: string;
   valor: string;
@@ -49,16 +61,25 @@ export type PlanoSupabase = {
 // Funções para manipulação de clientes
 export const clientesService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*');
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*');
+        
+      if (error) {
+        console.error('Erro ao buscar clientes:', error);
+        return [];
+      }
       
-    if (error) {
-      console.error('Erro ao buscar clientes:', error);
+      // Ensure all clients have an id
+      return (data || []).map(cliente => ({
+        ...cliente,
+        id: cliente.id || `temp-${Date.now()}` // Ensure id exists
+      })) as ClienteSupabase[];
+    } catch (error) {
+      console.error('Erro na operação getAll de clientes:', error);
       return [];
     }
-    
-    return data as ClienteSupabase[];
   },
   
   async getById(id: string) {
@@ -123,16 +144,25 @@ export const clientesService = {
 // Funções para manipulação de planos
 export const planosService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('planos')
-      .select('*');
+    try {
+      const { data, error } = await supabase
+        .from('planos')
+        .select('*');
+        
+      if (error) {
+        console.error('Erro ao buscar planos:', error);
+        return [];
+      }
       
-    if (error) {
-      console.error('Erro ao buscar planos:', error);
+      // Ensure all plans have an id
+      return (data || []).map(plano => ({
+        ...plano,
+        id: plano.id || `temp-${Date.now()}` // Ensure id exists
+      })) as PlanoSupabase[];
+    } catch (error) {
+      console.error('Erro na operação getAll de planos:', error);
       return [];
     }
-    
-    return data as PlanoSupabase[];
   },
   
   async getById(id: string) {

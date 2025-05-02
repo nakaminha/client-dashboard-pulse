@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,7 @@ import ClienteForm from './ClienteForm';
 import { clientesService, ClienteSupabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+// Updated to align with ClienteSupabase type
 export type Cliente = {
   id: string;
   nome: string;
@@ -30,8 +30,10 @@ export type Cliente = {
   endereco: string;
   temCpfCnpj: boolean;
   temEndereco: boolean;
-  plano?: string;
-  vencimento?: string;
+  plano?: string | null;
+  vencimento?: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 const ClientesList = () => {
@@ -93,7 +95,15 @@ const ClientesList = () => {
     }
   });
   
-  const filteredClientes = clientesData.filter(cliente => {
+  // Ensure all clients have required properties
+  const clientesFormatados: Cliente[] = clientesData.map(cliente => ({
+    ...cliente,
+    id: cliente.id || `temp-${Date.now()}`,
+    plano: cliente.plano || undefined,
+    vencimento: cliente.vencimento || undefined
+  }));
+
+  const filteredClientes = clientesFormatados.filter(cliente => {
     const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           cliente.telefone.includes(searchTerm);
@@ -230,7 +240,7 @@ const ClientesList = () => {
       
       <div className="flex justify-between items-center text-sm text-gray-500">
         <div>
-          Mostrando {indiceInicial + 1} a {Math.min(indiceFinal, totalRegistros)} de {totalRegistros} entradas (filtrado de {clientesData.length} entradas totais)
+          Mostrando {indiceInicial + 1} a {Math.min(indiceFinal, totalRegistros)} de {totalRegistros} entradas (filtrado de {clientesFormatados.length} entradas totais)
         </div>
         
         <ClientesPagination 

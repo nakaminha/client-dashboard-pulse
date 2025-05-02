@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,7 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { planosService, PlanoSupabase } from '@/lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import SupabaseWarning from '@/components/common/SupabaseWarning';
 
 interface PlanoFormValues {
   nome: string;
@@ -31,7 +31,14 @@ interface Plano extends PlanoFormValues {
 
 const Planos = () => {
   const [criandoPlano, setCriandoPlano] = useState(false);
+  const [supabaseConfigured, setSupabaseConfigured] = useState(true);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Check if Supabase URL is configured
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    setSupabaseConfigured(!!supabaseUrl);
+  }, []);
 
   const { data: planos = [], isLoading } = useQuery({
     queryKey: ['planos'],
@@ -90,6 +97,10 @@ const Planos = () => {
   if (criandoPlano) {
     return (
       <div className="space-y-6">
+        {!supabaseConfigured && (
+          <SupabaseWarning message="Para criar planos, configure as variáveis de ambiente do Supabase." />
+        )}
+        
         <div className="bg-azul-600 text-white p-4 rounded-lg flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">CRIAR PLANO</h1>
           <div className="flex items-center gap-2">
@@ -342,6 +353,10 @@ const Planos = () => {
         <h1 className="text-2xl font-bold tracking-tight">Planos</h1>
         <p className="text-gray-500 dark:text-gray-400">Gerenciamento de planos e assinaturas.</p>
       </div>
+      
+      {!supabaseConfigured && (
+        <SupabaseWarning message="Para gerenciar planos, configure as variáveis de ambiente do Supabase." />
+      )}
       
       <div className="flex justify-between items-center">
         <div className="relative">
