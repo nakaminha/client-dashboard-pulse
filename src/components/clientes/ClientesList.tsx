@@ -63,16 +63,16 @@ const ClientesList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itensPorPagina, setItensPorPagina] = useState(25);
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
-  const [planoSelecionado, setPlanoSelecionado] = useState('');
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState('todos');
+  const [planoSelecionado, setPlanoSelecionado] = useState('todos');
   
   const filteredClientes = clientesData.filter(cliente => {
     const matchesSearch = cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           cliente.telefone.includes(searchTerm);
     
-    const matchesCategoria = categoriaSelecionada === '' || cliente.categoria === categoriaSelecionada;
-    const matchesPlano = planoSelecionado === '' || cliente.plano === planoSelecionado;
+    const matchesCategoria = categoriaSelecionada === 'todos' || cliente.categoria === categoriaSelecionada;
+    const matchesPlano = planoSelecionado === 'todos' || cliente.plano === planoSelecionado;
     
     return matchesSearch && matchesCategoria && matchesPlano;
   });

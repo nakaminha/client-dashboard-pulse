@@ -23,7 +23,7 @@ const ClientesFilters = ({
             <SelectValue placeholder="Mostrar todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Mostrar todos</SelectItem>
+            <SelectItem value="todos">Mostrar todos</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="regular">Regular</SelectItem>
             <SelectItem value="basic">Básico</SelectItem>
@@ -38,7 +38,7 @@ const ClientesFilters = ({
             <SelectValue placeholder="Mostrar todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Mostrar todos</SelectItem>
+            <SelectItem value="todos">Mostrar todos</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="regular">Regular</SelectItem>
             <SelectItem value="basic">Básico</SelectItem>
@@ -53,7 +53,7 @@ const ClientesFilters = ({
             <SelectValue placeholder="Mostrar todos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Mostrar todos</SelectItem>
+            <SelectItem value="todos">Mostrar todos</SelectItem>
             <SelectItem value="BÁSICO">Básico</SelectItem>
             <SelectItem value="PADRÃO">Padrão</SelectItem>
             <SelectItem value="PREMIUM">Premium</SelectItem>
