@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Inicializa o cliente Supabase usando as variáveis de ambiente
@@ -14,7 +15,12 @@ export const supabase = supabaseUrl
         insert: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
         update: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
         delete: () => ({ error: { message: 'Supabase não configurado' } }),
-        eq: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        eq: () => ({ 
+          data: null, 
+          error: { message: 'Supabase não configurado' },
+          select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+          single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        }),
         single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
       }),
     };
@@ -58,6 +64,17 @@ export type PlanoSupabase = {
   updated_at?: string;
 };
 
+// Tipo para transações financeiras
+export type TransacaoSupabase = {
+  id: string;
+  cliente_id: string;
+  valor: number;
+  tipo: 'entrada' | 'saida';
+  descricao: string;
+  data: string;
+  created_at?: string;
+};
+
 // Funções para manipulação de clientes
 export const clientesService = {
   async getAll() {
@@ -83,61 +100,81 @@ export const clientesService = {
   },
   
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) {
+        console.error(`Erro ao buscar cliente ${id}:`, error);
+        return null;
+      }
       
-    if (error) {
+      return data as ClienteSupabase;
+    } catch (error) {
       console.error(`Erro ao buscar cliente ${id}:`, error);
       return null;
     }
-    
-    return data as ClienteSupabase;
   },
   
   async create(cliente: ClienteSupabase) {
-    const { data, error } = await supabase
-      .from('clientes')
-      .insert([cliente])
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .insert([cliente])
+        .select();
+        
+      if (error) {
+        console.error('Erro ao criar cliente:', error);
+        throw error;
+      }
       
-    if (error) {
+      return data[0] as ClienteSupabase;
+    } catch (error) {
       console.error('Erro ao criar cliente:', error);
       throw error;
     }
-    
-    return data[0] as ClienteSupabase;
   },
   
   async update(id: string, cliente: Partial<ClienteSupabase>) {
-    const { data, error } = await supabase
-      .from('clientes')
-      .update(cliente)
-      .eq('id', id)
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .update(cliente)
+        .eq('id', id)
+        .select();
+        
+      if (error) {
+        console.error(`Erro ao atualizar cliente ${id}:`, error);
+        throw error;
+      }
       
-    if (error) {
+      return data[0] as ClienteSupabase;
+    } catch (error) {
       console.error(`Erro ao atualizar cliente ${id}:`, error);
       throw error;
     }
-    
-    return data[0] as ClienteSupabase;
   },
   
   async delete(id: string) {
-    const { error } = await supabase
-      .from('clientes')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error(`Erro ao excluir cliente ${id}:`, error);
+        throw error;
+      }
       
-    if (error) {
+      return true;
+    } catch (error) {
       console.error(`Erro ao excluir cliente ${id}:`, error);
       throw error;
     }
-    
-    return true;
   }
 };
 
@@ -166,60 +203,180 @@ export const planosService = {
   },
   
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('planos')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('planos')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) {
+        console.error(`Erro ao buscar plano ${id}:`, error);
+        return null;
+      }
       
-    if (error) {
+      return data as PlanoSupabase;
+    } catch (error) {
       console.error(`Erro ao buscar plano ${id}:`, error);
       return null;
     }
-    
-    return data as PlanoSupabase;
   },
   
   async create(plano: PlanoSupabase) {
-    const { data, error } = await supabase
-      .from('planos')
-      .insert([plano])
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('planos')
+        .insert([plano])
+        .select();
+        
+      if (error) {
+        console.error('Erro ao criar plano:', error);
+        throw error;
+      }
       
-    if (error) {
+      return data[0] as PlanoSupabase;
+    } catch (error) {
       console.error('Erro ao criar plano:', error);
       throw error;
     }
-    
-    return data[0] as PlanoSupabase;
   },
   
   async update(id: string, plano: Partial<PlanoSupabase>) {
-    const { data, error } = await supabase
-      .from('planos')
-      .update(plano)
-      .eq('id', id)
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('planos')
+        .update(plano)
+        .eq('id', id)
+        .select();
+        
+      if (error) {
+        console.error(`Erro ao atualizar plano ${id}:`, error);
+        throw error;
+      }
       
-    if (error) {
+      return data[0] as PlanoSupabase;
+    } catch (error) {
       console.error(`Erro ao atualizar plano ${id}:`, error);
       throw error;
     }
-    
-    return data[0] as PlanoSupabase;
   },
   
   async delete(id: string) {
-    const { error } = await supabase
-      .from('planos')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('planos')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error(`Erro ao excluir plano ${id}:`, error);
+        throw error;
+      }
       
-    if (error) {
+      return true;
+    } catch (error) {
       console.error(`Erro ao excluir plano ${id}:`, error);
       throw error;
     }
-    
-    return true;
+  }
+};
+
+// Serviço para transações financeiras
+export const transacoesService = {
+  async getAll() {
+    try {
+      const { data, error } = await supabase
+        .from('transacoes')
+        .select('*')
+        .order('data', { ascending: false });
+        
+      if (error) {
+        console.error('Erro ao buscar transações:', error);
+        return [];
+      }
+      
+      return data as TransacaoSupabase[];
+    } catch (error) {
+      console.error('Erro na operação getAll de transações:', error);
+      return [];
+    }
+  },
+  
+  // Obter resumo financeiro do mês atual
+  async getResumoMensal(mes: number, ano: number) {
+    try {
+      const primeiroDia = new Date(ano, mes, 1).toISOString().split('T')[0];
+      const ultimoDia = new Date(ano, mes + 1, 0).toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('transacoes')
+        .select('*')
+        .gte('data', primeiroDia)
+        .lte('data', ultimoDia);
+        
+      if (error) {
+        console.error(`Erro ao buscar transações do mês ${mes}/${ano}:`, error);
+        return {
+          totalEntradas: 0,
+          totalSaidas: 0,
+          saldoFinal: 0,
+          transacoes: []
+        };
+      }
+      
+      const transacoes = data as TransacaoSupabase[];
+      const totalEntradas = transacoes
+        .filter(t => t.tipo === 'entrada')
+        .reduce((acc, t) => acc + t.valor, 0);
+        
+      const totalSaidas = transacoes
+        .filter(t => t.tipo === 'saida')
+        .reduce((acc, t) => acc + t.valor, 0);
+        
+      return {
+        totalEntradas,
+        totalSaidas,
+        saldoFinal: totalEntradas - totalSaidas,
+        transacoes
+      };
+    } catch (error) {
+      console.error(`Erro ao buscar resumo mensal:`, error);
+      return {
+        totalEntradas: 0,
+        totalSaidas: 0,
+        saldoFinal: 0,
+        transacoes: []
+      };
+    }
+  },
+  
+  // Buscar histórico de faturamento por mês
+  async getHistoricoMensal(quantidadeMeses: number = 12) {
+    try {
+      const hoje = new Date();
+      const historicoMensal = [];
+      
+      for (let i = 0; i < quantidadeMeses; i++) {
+        const mes = hoje.getMonth() - i;
+        const ano = hoje.getFullYear() + Math.floor(mes / 12);
+        const mesAjustado = ((mes % 12) + 12) % 12;
+        
+        const { totalEntradas } = await this.getResumoMensal(mesAjustado, ano);
+        
+        const nomeMes = new Date(ano, mesAjustado, 1).toLocaleDateString('pt-BR', { month: 'long' });
+        
+        historicoMensal.push({
+          mes: mesAjustado,
+          ano,
+          nomeMes: nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1),
+          totalFaturado: totalEntradas
+        });
+      }
+      
+      return historicoMensal;
+    } catch (error) {
+      console.error('Erro ao buscar histórico mensal:', error);
+      return [];
+    }
   }
 };
