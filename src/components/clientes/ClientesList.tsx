@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { FileText, Plus, Search, Upload, Download } from 'lucide-react';
 import ClientesFilters from './ClientesFilters';
@@ -44,8 +45,15 @@ const ClientesList = () => {
   const [itensPorPagina, setItensPorPagina] = useState(25);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('todos');
   const [planoSelecionado, setPlanoSelecionado] = useState('todos');
+  const [supabaseConfigured, setSupabaseConfigured] = useState(true);
   
   const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    // Verificar se o Supabase está configurado
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    setSupabaseConfigured(!!supabaseUrl);
+  }, []);
   
   // Buscar clientes do Supabase
   const { data: clientesData = [], isLoading, isError } = useQuery({
@@ -62,7 +70,11 @@ const ClientesList = () => {
       setDialogOpen(false);
     },
     onError: (error) => {
-      toast.error('Erro ao adicionar cliente');
+      if (!supabaseConfigured) {
+        toast.error('Não foi possível adicionar cliente. O Supabase não está configurado.');
+      } else {
+        toast.error('Erro ao adicionar cliente');
+      }
       console.error(error);
     }
   });
@@ -77,7 +89,11 @@ const ClientesList = () => {
       setDialogOpen(false);
     },
     onError: (error) => {
-      toast.error('Erro ao atualizar cliente');
+      if (!supabaseConfigured) {
+        toast.error('Não foi possível atualizar cliente. O Supabase não está configurado.');
+      } else {
+        toast.error('Erro ao atualizar cliente');
+      }
       console.error(error);
     }
   });
@@ -90,7 +106,11 @@ const ClientesList = () => {
       toast.success('Cliente removido com sucesso!');
     },
     onError: (error) => {
-      toast.error('Erro ao remover cliente');
+      if (!supabaseConfigured) {
+        toast.error('Não foi possível remover cliente. O Supabase não está configurado.');
+      } else {
+        toast.error('Erro ao remover cliente');
+      }
       console.error(error);
     }
   });
@@ -121,6 +141,13 @@ const ClientesList = () => {
   const clientesPaginados = filteredClientes.slice(indiceInicial, indiceFinal);
 
   const handleSalvarCliente = (cliente: Cliente) => {
+    if (!supabaseConfigured) {
+      toast.error('Não é possível salvar o cliente. O Supabase não está configurado.', {
+        description: 'Configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para continuar.'
+      });
+      return;
+    }
+    
     if (cliente.id) {
       // Atualizar cliente existente
       const { id, ...dadosCliente } = cliente;
@@ -132,6 +159,11 @@ const ClientesList = () => {
   };
 
   const handleExcluirCliente = (id: string) => {
+    if (!supabaseConfigured) {
+      toast.error('Não é possível excluir o cliente. O Supabase não está configurado.');
+      return;
+    }
+    
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       excluirClienteMutation.mutate(id);
     }
@@ -143,6 +175,13 @@ const ClientesList = () => {
   };
 
   const handleAdicionarCliente = () => {
+    if (!supabaseConfigured) {
+      toast.error('Não é possível adicionar clientes. O Supabase não está configurado.', {
+        description: 'Configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para continuar.'
+      });
+      return;
+    }
+    
     setClienteParaEditar(null);
     setDialogOpen(true);
   };
@@ -160,7 +199,14 @@ const ClientesList = () => {
     <div className="space-y-4">
       {isLoading && <div className="text-center p-4">Carregando clientes...</div>}
       
-      {isError && (
+      {isError && !supabaseConfigured && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-md mb-4">
+          <p className="font-medium">O Supabase não está configurado</p>
+          <p className="text-sm">Para gerenciar clientes, configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.</p>
+        </div>
+      )}
+      
+      {isError && supabaseConfigured && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
           Erro ao carregar clientes. Por favor, tente novamente mais tarde.
         </div>
@@ -214,7 +260,10 @@ const ClientesList = () => {
         </Button>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Button className="bg-purple-500 hover:bg-purple-600" onClick={handleAdicionarCliente}>
+          <Button 
+            className="bg-purple-500 hover:bg-purple-600" 
+            onClick={handleAdicionarCliente}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Cliente
           </Button>
@@ -223,6 +272,11 @@ const ClientesList = () => {
               <DialogTitle>
                 {clienteParaEditar ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
               </DialogTitle>
+              {!supabaseConfigured && (
+                <DialogDescription className="text-amber-600 mt-2">
+                  Atenção: O Supabase não está configurado. Os dados não serão salvos permanentemente.
+                </DialogDescription>
+              )}
             </DialogHeader>
             <ClienteForm 
               cliente={clienteParaEditar} 

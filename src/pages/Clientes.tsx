@@ -23,7 +23,7 @@ const Clientes = () => {
       </div>
       
       {!supabaseConfigured && (
-        <SupabaseWarning message="Para gerenciar clientes, configure as variáveis de ambiente do Supabase." />
+        <SupabaseWarning message="Para gerenciar clientes com persistência de dados, configure as variáveis de ambiente do Supabase." />
       )}
       
       <ClientesList />
