@@ -11,10 +11,41 @@ export const supabase = supabaseUrl
   ? createClient(supabaseUrl, supabaseAnonKey)
   : {
       from: () => ({
-        select: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
-        insert: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-        update: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-        delete: () => ({ error: { message: 'Supabase não configurado' } }),
+        select: () => ({ 
+          data: [], 
+          error: { message: 'Supabase não configurado' },
+          eq: () => ({
+            data: [], 
+            error: { message: 'Supabase não configurado' },
+            select: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
+            single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+          }),
+          gte: () => ({
+            data: [], 
+            error: { message: 'Supabase não configurado' },
+            lte: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
+          }),
+          lte: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
+          order: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
+        }),
+        insert: () => ({ 
+          data: null, 
+          error: { message: 'Supabase não configurado' },
+          select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+        }),
+        update: () => ({ 
+          data: null, 
+          error: { message: 'Supabase não configurado' },
+          eq: () => ({
+            data: null, 
+            error: { message: 'Supabase não configurado' },
+            select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
+          }),
+        }),
+        delete: () => ({ 
+          error: { message: 'Supabase não configurado' },
+          eq: () => ({ error: { message: 'Supabase não configurado' } }),
+        }),
         eq: () => ({ 
           data: null, 
           error: { message: 'Supabase não configurado' },
