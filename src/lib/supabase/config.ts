@@ -5,8 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Create a placeholder client if URL is not available
-// This prevents the app from crashing during development
+// Create a proper client if URL is available, otherwise use a mock client
 export const supabase = supabaseUrl 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : {
@@ -54,4 +53,11 @@ export const supabase = supabaseUrl
         }),
         single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
       }),
+      auth: {
+        signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase não configurado' } }),
+        signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase não configurado' } }),
+        signOut: () => Promise.resolve({ error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } }, error: null })
+      }
     };
