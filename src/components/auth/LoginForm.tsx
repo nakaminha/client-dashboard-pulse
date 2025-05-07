@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="w-[350px] shadow-lg">
+    <Card className="w-full shadow-lg">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">Portal Admin</CardTitle>
         <CardDescription className="text-center">
@@ -60,7 +61,7 @@ const LoginForm = () => {
             />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col space-y-2">
           <Button
             type="submit"
             className="w-full bg-azul-600 hover:bg-azul-700"
@@ -68,6 +69,14 @@ const LoginForm = () => {
           >
             {isLoading ? 'Entrando...' : 'Entrar'}
           </Button>
+          <div className="text-center w-full pt-2">
+            <p className="text-sm text-muted-foreground">
+              Não tem uma conta?{' '}
+              <Link to="/register" className="text-azul-600 hover:underline">
+                Registre-se
+              </Link>
+            </p>
+          </div>
         </CardFooter>
       </form>
     </Card>
