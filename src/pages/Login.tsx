@@ -19,12 +19,12 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-b from-azul-50 to-azul-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-azul-800">Portal Administrativo</h1>
-          <p className="text-azul-600 mt-2">Gerencie seus clientes e dados</p>
+          <h1 className="text-4xl font-bold text-azul-800">Pk System</h1>
+          <p className="text-azul-600 mt-2">Gerenciador de Clientes IPTV</p>
         </div>
         <LoginForm />
         <div className="text-center mt-6 text-sm text-gray-500">
-          <p>Use admin@exemplo.com / senha123 para entrar</p>
+          <p>Faça sua solicitação via / WhatsApp (85) 98570-4035</p>
         </div>
       </div>
     </div>
