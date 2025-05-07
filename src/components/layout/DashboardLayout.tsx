@@ -3,19 +3,27 @@ import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const DashboardLayout = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthorized } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  if (!isAuthenticated) {
-    return null; // Não renderiza nada enquanto está redirecionando
+    if (!isAuthorized) {
+      toast.error('Seu acesso está pendente de aprovação pelo administrador.');
+      navigate('/acesso-pendente');
+    }
+  }, [isAuthenticated, isAuthorized, navigate]);
+
+  // Não renderiza nada enquanto está redirecionando
+  if (!isAuthenticated || !isAuthorized) {
+    return null;
   }
 
   return (

@@ -9,6 +9,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import AcessoPendente from "./pages/AcessoPendente";
 import Clientes from "./pages/Clientes";
 import NotFound from "./pages/NotFound";
 import Financeiro from "./pages/Financeiro";
@@ -33,6 +35,8 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/acesso-pendente" element={<AcessoPendente />} />
               <Route path="/" element={<DashboardLayout />}>
                 <Route index element={<Index />} />
                 <Route path="clientes" element={<Clientes />} />
