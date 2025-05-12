@@ -72,34 +72,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (nome: string, email: string, senha: string) => {
     try {
-      // 1. Criar o usuário na autenticação Supabase
+      // 1. Verificar se o email já está em uso
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('perfis')
+        .select('email')
+        .eq('email', email);
+
+      if (checkError) {
+        console.error('Erro ao verificar email:', checkError);
+        throw new Error('Erro ao verificar disponibilidade do email');
+      }
+
+      if (existingUsers && existingUsers.length > 0) {
+        throw new Error('Este email já está em uso');
+      }
+
+      // 2. Criar o usuário na autenticação Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,
-        options: {
-          data: {
-            nome,
-          },
-        }
       });
 
       if (error) throw error;
 
-      // 2. Adicionar perfil do usuário na tabela perfis com cargo inicial 'pendente'
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('perfis')
-          .insert({
-            id: data.user.id,
-            nome,
-            email,
-            role: 'pendente' as UserRole,
-          });
+      // 3. Garantir que temos um ID de usuário antes de criar o perfil
+      if (!data?.user?.id) {
+        throw new Error('Erro ao criar usuário: ID não retornado');
+      }
 
-        if (profileError) {
-          console.error('Erro ao criar perfil:', profileError);
-          throw new Error('Erro ao criar perfil de usuário');
-        }
+      // 4. Adicionar perfil do usuário na tabela perfis com cargo inicial 'pendente'
+      const { error: profileError } = await supabase
+        .from('perfis')
+        .insert({
+          id: data.user.id,
+          nome,
+          email,
+          role: 'pendente',
+          created_at: new Date().toISOString()
+        });
+
+      if (profileError) {
+        console.error('Erro ao criar perfil:', profileError);
+        throw new Error('Erro ao criar perfil de usuário');
       }
 
       toast.success('Registro realizado com sucesso! Aguarde aprovação para acessar o sistema.');

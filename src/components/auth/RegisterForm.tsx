@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const RegisterForm = () => {
   const [nome, setNome] = useState('');
@@ -17,19 +18,47 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const { register } = useAuth();
+
+  const validateForm = () => {
+    let isValid = true;
+    setPasswordError('');
+    setEmailError('');
+
+    if (!email) {
+      setEmailError('Email é obrigatório');
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Email inválido');
+      isValid = false;
+    }
+
+    if (!nome) {
+      toast.error('Nome é obrigatório');
+      isValid = false;
+    }
+
+    if (!senha) {
+      setPasswordError('Senha é obrigatória');
+      isValid = false;
+    } else if (senha.length < 6) {
+      setPasswordError('A senha deve ter pelo menos 6 caracteres');
+      isValid = false;
+    }
+
+    if (senha !== confirmSenha) {
+      setPasswordError('As senhas não coincidem');
+      isValid = false;
+    }
+
+    return isValid;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError('');
-
-    if (senha !== confirmSenha) {
-      setPasswordError('As senhas não coincidem.');
-      return;
-    }
-
-    if (senha.length < 6) {
-      setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+    
+    if (!validateForm()) {
       return;
     }
 
@@ -37,6 +66,8 @@ const RegisterForm = () => {
     
     try {
       await register(nome, email, senha);
+    } catch (error) {
+      console.error('Erro durante o registro:', error);
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +104,16 @@ const RegisterForm = () => {
               type="email"
               placeholder="seu@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError('');
+              }}
+              className={emailError ? "border-red-500" : ""}
               required
             />
+            {emailError && (
+              <p className="text-red-500 text-xs mt-1">{emailError}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="senha">Senha</Label>
@@ -84,19 +122,22 @@ const RegisterForm = () => {
                 id="senha"
                 type={showPassword ? "text" : "password"}
                 value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                onChange={(e) => {
+                  setSenha(e.target.value);
+                  setPasswordError('');
+                }}
                 className={passwordError ? "border-red-500" : ""}
                 required
               />
               <button
                 type="button"
                 onClick={toggleShowPassword}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
+                  <EyeOff className="h-4 w-4" />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-500" />
+                  <Eye className="h-4 w-4" />
                 )}
               </button>
             </div>
@@ -108,19 +149,22 @@ const RegisterForm = () => {
                 id="confirmSenha"
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmSenha}
-                onChange={(e) => setConfirmSenha(e.target.value)}
+                onChange={(e) => {
+                  setConfirmSenha(e.target.value);
+                  setPasswordError('');
+                }}
                 className={passwordError ? "border-red-500" : ""}
                 required
               />
               <button
                 type="button"
                 onClick={toggleShowConfirmPassword}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-500" />
+                  <EyeOff className="h-4 w-4" />
                 ) : (
-                  <Eye className="h-4 w-4 text-gray-500" />
+                  <Eye className="h-4 w-4" />
                 )}
               </button>
             </div>
@@ -135,7 +179,12 @@ const RegisterForm = () => {
             className="w-full bg-azul-600 hover:bg-azul-700"
             disabled={isLoading}
           >
-            {isLoading ? 'Registrando...' : 'Registrar'}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Registrando...
+              </>
+            ) : 'Registrar'}
           </Button>
           <div className="text-center w-full pt-2">
             <p className="text-sm text-muted-foreground">
