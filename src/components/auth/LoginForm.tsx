@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -17,10 +18,18 @@ const LoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !senha) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       await login(email, senha);
+    } catch (error) {
+      console.error('Erro no login:', error);
     } finally {
       setIsLoading(false);
     }
@@ -47,6 +56,7 @@ const LoginForm = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -63,11 +73,13 @@ const LoginForm = () => {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={toggleShowPassword}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                disabled={isLoading}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4 text-gray-500" />
@@ -84,7 +96,14 @@ const LoginForm = () => {
             className="w-full bg-azul-600 hover:bg-azul-700"
             disabled={isLoading}
           >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Entrando...
+              </>
+            ) : 
+              'Entrar'
+            }
           </Button>
           <div className="text-center w-full pt-2">
             <p className="text-sm text-muted-foreground">

@@ -4,6 +4,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const DashboardLayout = () => {
   const { isAuthenticated, isAuthorized, user } = useAuth();
@@ -20,8 +21,17 @@ const DashboardLayout = () => {
     }
   }, [isAuthenticated, isAuthorized, navigate]);
 
-  // Não renderiza nada enquanto está redirecionando
-  if (!isAuthenticated || !isAuthorized) {
+  // Mostra um indicador de carregamento enquanto está verificando autenticação
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-azul-600" />
+      </div>
+    );
+  }
+  
+  // Não renderiza nada enquanto está redirecionando para acesso pendente
+  if (!isAuthorized) {
     return null;
   }
 

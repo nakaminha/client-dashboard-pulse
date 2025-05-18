@@ -54,19 +54,48 @@ export const supabase = supabaseUrl
         single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
       }),
       auth: {
-        signInWithPassword: () => Promise.resolve({ 
-          data: null, 
-          error: { message: 'Invalid login credentials' } // Simulating a standard Supabase error for invalid login
+        signInWithPassword: () => Promise.resolve({
+          data: { 
+            user: { 
+              id: 'mock-user-id',
+              email: 'mock@example.com',
+            },
+            session: {
+              user: {
+                id: 'mock-user-id',
+                email: 'mock@example.com'
+              }
+            }
+          }, 
+          error: null
         }),
         signUp: () => Promise.resolve({ 
           data: { user: { id: 'mock-user-id', email: 'mock@example.com' } }, 
           error: null 
         }),
         signOut: () => Promise.resolve({ error: null }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        onAuthStateChange: () => ({ 
-          data: { subscription: { unsubscribe: () => {} } }, 
+        getSession: () => Promise.resolve({ 
+          data: { 
+            session: { 
+              user: { 
+                id: 'mock-user-id',
+                email: 'mock@example.com' 
+              } 
+            } 
+          }, 
           error: null 
-        })
+        }),
+        onAuthStateChange: (callback) => { 
+          callback('SIGNED_IN', { 
+            user: { 
+              id: 'mock-user-id',
+              email: 'mock@example.com' 
+            }
+          });
+          return { 
+            data: { subscription: { unsubscribe: () => {} } }, 
+            error: null 
+          };
+        }
       }
     };

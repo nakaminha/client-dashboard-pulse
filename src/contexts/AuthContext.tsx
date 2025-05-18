@@ -33,6 +33,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, senha: string) => {
     try {
+      // Para ambiente de desenvolvimento sem Supabase configurado
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.log('Ambiente de desenvolvimento: usando login simulado');
+        
+        // Simula um login bem-sucedido com usuário administrador
+        const mockUser: User = {
+          id: 'mock-user-id',
+          nome: 'Usuário de Teste',
+          email: email,
+          role: 'admin', // Simula um usuário com acesso completo
+        };
+        
+        setUser(mockUser);
+        toast.success('Login realizado com sucesso (modo simulação)!');
+        navigate('/');
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
@@ -71,26 +89,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         navigate('/');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer login. Tente novamente.');
       console.error('Erro de login:', error);
+      toast.error(error.message || 'Erro ao fazer login. Tente novamente.');
     }
   };
 
   const register = async (nome: string, email: string, senha: string) => {
     try {
-      // 1. Verificar se o email já está em uso na autenticação do Supabase
-      const { data: existingAuth, error: authCheckError } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'senha_temporaria_para_verificacao',
-      });
+      // Para ambiente de desenvolvimento sem Supabase configurado
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.log('Ambiente de desenvolvimento: usando registro simulado');
+        toast.success('Registro realizado com sucesso! Aguarde aprovação para acessar o sistema.');
+        navigate('/login');
+        return;
+      }
 
-      // Se não houver erro de credenciais inválidas, significa que o email existe
-      if (!authCheckError || authCheckError.message !== 'Invalid login credentials') {
+      // 1. Verificar se o email já está em uso na autenticação do Supabase
+      try {
+        const { error: authCheckError } = await supabase.auth.signInWithPassword({
+          email,
+          password: 'senha_temporaria_para_verificacao',
+        });
+  
+        // Se não houver erro de credenciais inválidas, significa que o email existe
         if (!authCheckError) {
           // Fazer logout para limpar a sessão criada pela verificação
           await supabase.auth.signOut();
+          throw new Error('Este email já está registrado');
         }
-        throw new Error('Este email já está registrado');
+      } catch (err: any) {
+        // Se o erro não for de credenciais inválidas, é provável que o email já exista
+        if (err.message !== 'Invalid login credentials' && err.message !== 'Este email já está registrado') {
+          console.log('Erro na verificação de email:', err);
+          // Não vamos lançar erro aqui, pois pode ser apenas uma falha na verificação
+        }
+        if (err.message === 'Este email já está registrado') {
+          throw err;
+        }
       }
 
       // 2. Verificar se o email já está em uso na tabela perfis
@@ -145,12 +180,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       toast.success('Registro realizado com sucesso! Aguarde aprovação para acessar o sistema.');
       navigate('/login');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao registrar. Tente novamente.');
       console.error('Erro de registro:', error);
+      toast.error(error.message || 'Erro ao registrar. Tente novamente.');
     }
   };
 
   const logout = async () => {
+    // Para ambiente de desenvolvimento sem Supabase configurado
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      setUser(null);
+      toast.success('Logout realizado com sucesso (modo simulação)');
+      navigate('/login');
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
     
     if (error) {
@@ -167,10 +210,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Verificar sessão atual ao carregar a aplicação
   useEffect(() => {
     const checkSession = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData?.session) {
-        try {
+      // Para ambiente de desenvolvimento sem Supabase configurado
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.log('Ambiente de desenvolvimento: sem verificação de sessão');
+        return;
+      }
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session) {
           const { data: profileData, error: profileError } = await supabase
             .from('perfis')
             .select('*')
@@ -197,13 +246,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               navigate('/acesso-pendente');
             }
           }
-        } catch (err) {
-          console.error('Erro ao verificar sessão:', err);
         }
+      } catch (err) {
+        console.error('Erro ao verificar sessão:', err);
       }
     };
 
     checkSession();
+
+    // Para ambiente de desenvolvimento sem Supabase configurado
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      return () => {};
+    }
 
     // Configura listener para mudança de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
