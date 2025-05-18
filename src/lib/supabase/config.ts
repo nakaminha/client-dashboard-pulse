@@ -5,97 +5,100 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Create a proper client if URL is available, otherwise use a mock client
+// Mock do cliente Supabase para desenvolvimento local
+const mockSupabaseClient = {
+  from: () => ({
+    select: () => ({ 
+      data: [], 
+      error: null,
+      eq: () => ({
+        data: [], 
+        error: null,
+        select: () => ({ data: [], error: null }),
+        single: () => ({ data: null, error: null }),
+      }),
+      gte: () => ({
+        data: [], 
+        error: null,
+        lte: () => ({ data: [], error: null }),
+      }),
+      lte: () => ({ data: [], error: null }),
+      order: () => ({ data: [], error: null }),
+    }),
+    insert: () => ({ 
+      data: null, 
+      error: null,
+      select: () => ({ data: null, error: null }),
+    }),
+    update: () => ({ 
+      data: null, 
+      error: null,
+      eq: () => ({
+        data: null, 
+        error: null,
+        select: () => ({ data: null, error: null }),
+      }),
+    }),
+    delete: () => ({ 
+      error: null,
+      eq: () => ({ error: null }),
+    }),
+    eq: () => ({ 
+      data: null, 
+      error: null,
+      select: () => ({ data: null, error: null }),
+      single: () => ({ data: null, error: null }),
+    }),
+    single: () => ({ data: null, error: null }),
+  }),
+  auth: {
+    signInWithPassword: () => Promise.resolve({
+      data: { 
+        user: { 
+          id: 'mock-user-id',
+          email: 'mock@example.com',
+        },
+        session: {
+          user: {
+            id: 'mock-user-id',
+            email: 'mock@example.com'
+          }
+        }
+      }, 
+      error: null
+    }),
+    signUp: () => Promise.resolve({ 
+      data: { user: { id: 'mock-user-id', email: 'mock@example.com' } }, 
+      error: null 
+    }),
+    signOut: () => Promise.resolve({ error: null }),
+    getSession: () => Promise.resolve({ 
+      data: { 
+        session: { 
+          user: { 
+            id: 'mock-user-id',
+            email: 'mock@example.com' 
+          } 
+        } 
+      }, 
+      error: null 
+    }),
+    onAuthStateChange: (callback: any) => { 
+      callback('SIGNED_IN', { 
+        user: { 
+          id: 'mock-user-id',
+          email: 'mock@example.com' 
+        }
+      });
+      return { 
+        data: { subscription: { unsubscribe: () => {} } }, 
+        error: null 
+      };
+    }
+  }
+};
+
+// Create a proper client if URL is available, otherwise use the mock client
 export const supabase = supabaseUrl 
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : {
-      from: () => ({
-        select: () => ({ 
-          data: [], 
-          error: { message: 'Supabase não configurado' },
-          eq: () => ({
-            data: [], 
-            error: { message: 'Supabase não configurado' },
-            select: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
-            single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-          }),
-          gte: () => ({
-            data: [], 
-            error: { message: 'Supabase não configurado' },
-            lte: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
-          }),
-          lte: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
-          order: () => ({ data: [], error: { message: 'Supabase não configurado' } }),
-        }),
-        insert: () => ({ 
-          data: null, 
-          error: { message: 'Supabase não configurado' },
-          select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-        }),
-        update: () => ({ 
-          data: null, 
-          error: { message: 'Supabase não configurado' },
-          eq: () => ({
-            data: null, 
-            error: { message: 'Supabase não configurado' },
-            select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-          }),
-        }),
-        delete: () => ({ 
-          error: { message: 'Supabase não configurado' },
-          eq: () => ({ error: { message: 'Supabase não configurado' } }),
-        }),
-        eq: () => ({ 
-          data: null, 
-          error: { message: 'Supabase não configurado' },
-          select: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-          single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-        }),
-        single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
-      }),
-      auth: {
-        signInWithPassword: () => Promise.resolve({
-          data: { 
-            user: { 
-              id: 'mock-user-id',
-              email: 'mock@example.com',
-            },
-            session: {
-              user: {
-                id: 'mock-user-id',
-                email: 'mock@example.com'
-              }
-            }
-          }, 
-          error: null
-        }),
-        signUp: () => Promise.resolve({ 
-          data: { user: { id: 'mock-user-id', email: 'mock@example.com' } }, 
-          error: null 
-        }),
-        signOut: () => Promise.resolve({ error: null }),
-        getSession: () => Promise.resolve({ 
-          data: { 
-            session: { 
-              user: { 
-                id: 'mock-user-id',
-                email: 'mock@example.com' 
-              } 
-            } 
-          }, 
-          error: null 
-        }),
-        onAuthStateChange: (callback) => { 
-          callback('SIGNED_IN', { 
-            user: { 
-              id: 'mock-user-id',
-              email: 'mock@example.com' 
-            }
-          });
-          return { 
-            data: { subscription: { unsubscribe: () => {} } }, 
-            error: null 
-          };
-        }
-      }
-    };
+  : mockSupabaseClient as any;

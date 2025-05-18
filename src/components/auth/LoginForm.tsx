@@ -28,8 +28,10 @@ const LoginForm = () => {
     
     try {
       await login(email, senha);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no login:', error);
+      // Mensagem de erro mais amigável
+      toast.error(error.message || 'Falha ao realizar login. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
     }

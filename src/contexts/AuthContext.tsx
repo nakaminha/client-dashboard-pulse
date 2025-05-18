@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -35,60 +36,64 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Login function
   const login = async (email: string, senha: string) => {
-    // Para ambiente de desenvolvimento sem Supabase configurado
-    if (!import.meta.env.VITE_SUPABASE_URL) {
-      console.log('Ambiente de desenvolvimento: usando login simulado');
-      
-      // Simula um login bem-sucedido com usuário administrador
-      const mockUser: User = {
-        id: 'mock-user-id',
-        nome: 'Usuário de Teste',
-        email: email,
-        role: 'admin', // Simula um usuário com acesso completo
+    try {
+      // Para ambiente de desenvolvimento sem Supabase configurado
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        console.log('Ambiente de desenvolvimento: usando login simulado');
+        
+        // Simula um login bem-sucedido com usuário administrador
+        const mockUser: User = {
+          id: 'mock-user-id',
+          nome: 'Usuário de Teste',
+          email: email,
+          role: 'admin', // Simula um usuário com acesso completo
+        };
+        
+        setUser(mockUser);
+        toast.success('Login realizado com sucesso (modo simulação)!');
+        navigate('/');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha,
+      });
+
+      if (error) throw error;
+
+      // Após login bem sucedido, buscar perfil do usuário para obter o cargo
+      const { data: profileData, error: profileError } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError);
+        throw new Error('Erro ao buscar informações do perfil');
+      }
+
+      const userData: User = {
+        id: data.user.id,
+        nome: profileData.nome || data.user.email?.split('@')[0] || 'Usuário',
+        email: data.user.email || '',
+        role: profileData.role || 'pendente',
       };
       
-      setUser(mockUser);
-      toast.success('Login realizado com sucesso (modo simulação)!');
-      navigate('/');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
-
-    if (error) throw error;
-
-    // Após login bem sucedido, buscar perfil do usuário para obter o cargo
-    const { data: profileData, error: profileError } = await supabase
-      .from('perfis')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-
-    if (profileError) {
-      console.error('Erro ao buscar perfil:', profileError);
-      toast.error('Erro ao buscar informações do perfil');
-      return;
-    }
-
-    const userData: User = {
-      id: data.user.id,
-      nome: profileData.nome || data.user.email?.split('@')[0] || 'Usuário',
-      email: data.user.email || '',
-      role: profileData.role || 'pendente',
-    };
-    
-    setUser(userData);
-    
-    toast.success('Login realizado com sucesso!');
-    
-    // Redireciona com base no cargo do usuário
-    if (userData.role === 'pendente') {
-      navigate('/acesso-pendente');
-    } else {
-      navigate('/');
+      setUser(userData);
+      
+      toast.success('Login realizado com sucesso!');
+      
+      // Redireciona com base no cargo do usuário
+      if (userData.role === 'pendente') {
+        navigate('/acesso-pendente');
+      } else {
+        navigate('/');
+      }
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      throw error;
     }
   };
 
