@@ -41,6 +41,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!import.meta.env.VITE_SUPABASE_URL) {
         console.log('Ambiente de desenvolvimento: usando login simulado');
         
+        // Simula um atraso para dar feedback visual ao usuário
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         // Simula um login bem-sucedido com usuário administrador
         const mockUser: User = {
           id: 'mock-user-id',
@@ -50,7 +53,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         
         setUser(mockUser);
-        toast.success('Login realizado com sucesso (modo simulação)!');
+        
+        // Redireciona para a página inicial após login bem-sucedido
         navigate('/');
         return;
       }
@@ -82,8 +86,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       setUser(userData);
-      
-      toast.success('Login realizado com sucesso!');
       
       // Redireciona com base no cargo do usuário
       if (userData.role === 'pendente') {

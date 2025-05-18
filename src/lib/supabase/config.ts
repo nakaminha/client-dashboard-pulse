@@ -52,21 +52,25 @@ const mockSupabaseClient = {
     single: () => ({ data: null, error: null }),
   }),
   auth: {
-    signInWithPassword: () => Promise.resolve({
-      data: { 
-        user: { 
-          id: 'mock-user-id',
-          email: 'mock@example.com',
-        },
-        session: {
-          user: {
+    signInWithPassword: (credentials: { email: string, password: string }) => {
+      console.log("Mock login chamado com:", credentials.email);
+      // Simula um login bem-sucedido para qualquer credencial
+      return Promise.resolve({
+        data: { 
+          user: { 
             id: 'mock-user-id',
-            email: 'mock@example.com'
+            email: credentials.email,
+          },
+          session: {
+            user: {
+              id: 'mock-user-id',
+              email: credentials.email
+            }
           }
-        }
-      }, 
-      error: null
-    }),
+        }, 
+        error: null
+      });
+    },
     signUp: () => Promise.resolve({ 
       data: { user: { id: 'mock-user-id', email: 'mock@example.com' } }, 
       error: null 

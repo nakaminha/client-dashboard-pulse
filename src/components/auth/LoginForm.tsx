@@ -27,7 +27,16 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
+      // Verifica se está em modo de desenvolvimento sem Supabase
+      const isDevMode = !import.meta.env.VITE_SUPABASE_URL;
+      
       await login(email, senha);
+      
+      if (isDevMode) {
+        toast.success('Login simulado realizado com sucesso! Redirecionando...');
+      } else {
+        toast.success('Login realizado com sucesso!');
+      }
     } catch (error: any) {
       console.error('Erro no login:', error);
       // Mensagem de erro mais amigável
@@ -45,6 +54,11 @@ const LoginForm = () => {
         <CardTitle className="text-2xl font-bold text-center">Portal Admin</CardTitle>
         <CardDescription className="text-center">
           Entre com suas credenciais para acessar
+          {!import.meta.env.VITE_SUPABASE_URL && (
+            <div className="mt-2 text-amber-500 text-xs font-semibold">
+              MODO DE SIMULAÇÃO ATIVO - Qualquer credencial irá funcionar
+            </div>
+          )}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
