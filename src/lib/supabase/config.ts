@@ -54,10 +54,19 @@ export const supabase = supabaseUrl
         single: () => ({ data: null, error: { message: 'Supabase não configurado' } }),
       }),
       auth: {
-        signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase não configurado' } }),
-        signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase não configurado' } }),
+        signInWithPassword: () => Promise.resolve({ 
+          data: null, 
+          error: { message: 'Invalid login credentials' } // Simulating a standard Supabase error for invalid login
+        }),
+        signUp: () => Promise.resolve({ 
+          data: { user: { id: 'mock-user-id', email: 'mock@example.com' } }, 
+          error: null 
+        }),
         signOut: () => Promise.resolve({ error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } }, error: null })
+        onAuthStateChange: () => ({ 
+          data: { subscription: { unsubscribe: () => {} } }, 
+          error: null 
+        })
       }
     };

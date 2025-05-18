@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const DashboardLayout = () => {
-  const { isAuthenticated, isAuthorized } = useAuth();
+  const { isAuthenticated, isAuthorized, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +16,6 @@ const DashboardLayout = () => {
     }
 
     if (!isAuthorized) {
-      toast.error('Seu acesso está pendente de aprovação pelo administrador.');
       navigate('/acesso-pendente');
     }
   }, [isAuthenticated, isAuthorized, navigate]);

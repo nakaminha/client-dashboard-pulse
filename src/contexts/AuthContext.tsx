@@ -63,7 +63,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(userData);
       
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+      
+      // Redireciona com base no cargo do usuário
+      if (userData.role === 'pendente') {
+        navigate('/acesso-pendente');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Erro ao fazer login. Tente novamente.');
       console.error('Erro de login:', error);
@@ -72,35 +78,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (nome: string, email: string, senha: string) => {
     try {
-      // 1. Verificar se o email já está em uso
-      const { data: existingUsers, error: checkError } = await supabase
+      // 1. Verificar se o email já está em uso na autenticação do Supabase
+      const { data: existingAuth, error: authCheckError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'senha_temporaria_para_verificacao',
+      });
+
+      // Se não houver erro de credenciais inválidas, significa que o email existe
+      if (!authCheckError || authCheckError.message !== 'Invalid login credentials') {
+        if (!authCheckError) {
+          // Fazer logout para limpar a sessão criada pela verificação
+          await supabase.auth.signOut();
+        }
+        throw new Error('Este email já está registrado');
+      }
+
+      // 2. Verificar se o email já está em uso na tabela perfis
+      const { data: existingProfiles, error: profileCheckError } = await supabase
         .from('perfis')
         .select('email')
         .eq('email', email);
 
-      if (checkError) {
-        console.error('Erro ao verificar email:', checkError);
+      if (profileCheckError) {
+        console.error('Erro ao verificar email:', profileCheckError);
         throw new Error('Erro ao verificar disponibilidade do email');
       }
 
-      if (existingUsers && existingUsers.length > 0) {
+      if (existingProfiles && existingProfiles.length > 0) {
         throw new Error('Este email já está em uso');
       }
 
-      // 2. Criar o usuário na autenticação Supabase
+      // 3. Criar o usuário na autenticação Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,
+        options: {
+          data: {
+            nome,
+          }
+        }
       });
 
       if (error) throw error;
 
-      // 3. Garantir que temos um ID de usuário antes de criar o perfil
+      // 4. Garantir que temos um ID de usuário antes de criar o perfil
       if (!data?.user?.id) {
         throw new Error('Erro ao criar usuário: ID não retornado');
       }
 
-      // 4. Adicionar perfil do usuário na tabela perfis com cargo inicial 'pendente'
+      // 5. Adicionar perfil do usuário na tabela perfis com cargo inicial 'pendente'
       const { error: profileError } = await supabase
         .from('perfis')
         .insert({
@@ -144,19 +170,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data: sessionData } = await supabase.auth.getSession();
       
       if (sessionData?.session) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('perfis')
-          .select('*')
-          .eq('id', sessionData.session.user.id)
-          .single();
-
-        if (!profileError && profileData) {
-          setUser({
-            id: sessionData.session.user.id,
-            nome: profileData.nome || sessionData.session.user.email?.split('@')[0] || 'Usuário',
-            email: sessionData.session.user.email || '',
-            role: profileData.role || 'pendente',
-          });
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('perfis')
+            .select('*')
+            .eq('id', sessionData.session.user.id)
+            .single();
+  
+          if (profileError) {
+            console.error('Erro ao buscar perfil:', profileError);
+            return;
+          }
+  
+          if (profileData) {
+            const userData: User = {
+              id: sessionData.session.user.id,
+              nome: profileData.nome || sessionData.session.user.email?.split('@')[0] || 'Usuário',
+              email: sessionData.session.user.email || '',
+              role: profileData.role || 'pendente',
+            };
+            
+            setUser(userData);
+            
+            // Redirecionar usuário pendente para página específica se já estiver autenticado
+            if (userData.role === 'pendente' && window.location.pathname !== '/acesso-pendente') {
+              navigate('/acesso-pendente');
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao verificar sessão:', err);
         }
       }
     };
@@ -166,19 +208,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Configura listener para mudança de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('perfis')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!profileError && profileData) {
-          setUser({
-            id: session.user.id,
-            nome: profileData.nome || session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
-            role: profileData.role || 'pendente',
-          });
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('perfis')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+  
+          if (profileError) {
+            console.error('Erro ao buscar perfil:', profileError);
+            return;
+          }
+  
+          if (profileData) {
+            setUser({
+              id: session.user.id,
+              nome: profileData.nome || session.user.email?.split('@')[0] || 'Usuário',
+              email: session.user.email || '',
+              role: profileData.role || 'pendente',
+            });
+          }
+        } catch (err) {
+          console.error('Erro ao processar mudança de autenticação:', err);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -186,9 +237,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      if (authListener?.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <AuthContext.Provider value={{
