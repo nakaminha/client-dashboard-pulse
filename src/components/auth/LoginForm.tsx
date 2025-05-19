@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,11 +16,15 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSimulationMode, setIsSimulationMode] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Verificar se está em modo de simulação
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    setIsSimulationMode(!supabaseUrl);
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+    const isLovableProject = window.location.hostname.includes('lovableproject');
+    
+    setIsSimulationMode(!supabaseUrl || isLocalhost || isLovableProject);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,23 +38,39 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      await login(email, senha);
+      await login(email, senha, isSimulationMode);
       
       if (isSimulationMode) {
-        toast.success('Login simulado realizado com sucesso! Redirecionando...');
+        toast.success('Login simulado realizado com sucesso!');
+        // Redirecionar após um pequeno atraso para mostrar o toast
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
       } else {
         toast.success('Login realizado com sucesso!');
       }
     } catch (error: any) {
       console.error('Erro no login:', error);
       
-      // Mensagens de erro mais específicas
-      if (error.message?.includes('fetch') || error.name === 'AuthRetryableFetchError') {
+      if (isSimulationMode) {
+        // Em modo de simulação, mostrar mensagem mas continuar com login simulado
+        toast.warning('Usando modo de simulação para continuar mesmo com erro de conexão');
+        
+        // Forçar login simulado apesar do erro
+        try {
+          await login(email, senha, true);
+          toast.success('Login simulado realizado com sucesso!');
+          
+          // Redirecionar após um pequeno atraso
+          setTimeout(() => {
+            navigate('/');
+          }, 1000);
+        } catch (innerError) {
+          console.error('Erro no login simulado:', innerError);
+          toast.error('Erro ao simular login. Tente novamente.');
+        }
+      } else if (error.message?.includes('fetch') || error.name === 'AuthRetryableFetchError') {
         toast.error('Erro de conexão com o servidor. Verifique sua internet ou tente novamente mais tarde.');
-      } else if (isSimulationMode) {
-        // Em modo de simulação, mostrar erro mas permitir login mesmo assim
-        toast.error('Erro no login, mas usando modo de simulação para continuar');
-        login(email, senha, true); // Força o modo de simulação
       } else {
         // Outros erros de credenciais
         toast.error(error.message || 'Falha ao realizar login. Verifique suas credenciais.');
@@ -69,7 +89,7 @@ const LoginForm = () => {
         <CardDescription className="text-center">
           Entre com suas credenciais para acessar
           {isSimulationMode && (
-            <div className="mt-2 text-amber-500 text-xs font-semibold">
+            <div className="mt-2 text-amber-500 text-xs font-semibold rounded-md bg-amber-50 p-1">
               MODO DE SIMULAÇÃO ATIVO - Qualquer credencial irá funcionar
             </div>
           )}

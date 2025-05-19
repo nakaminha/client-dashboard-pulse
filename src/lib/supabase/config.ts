@@ -53,7 +53,7 @@ const mockSupabaseClient = {
   }),
   auth: {
     signInWithPassword: (credentials: { email: string, password: string }) => {
-      console.log("Mock login chamado com:", credentials.email);
+      console.log("Mock login simulado com:", credentials.email);
       // Simula um login bem-sucedido para qualquer credencial
       return Promise.resolve({
         data: { 
@@ -102,21 +102,23 @@ const mockSupabaseClient = {
   }
 };
 
-// Try to create a proper client first, fall back to mock if fails or URL is missing
+// Determinar se estamos em modo de simulação
+const isSimulationMode = !supabaseUrl || !supabaseAnonKey || window.location.hostname.includes('lovableproject');
+
+// Escolher qual cliente usar baseado no modo
 let supabaseClient: any;
 
-try {
-  // Create a proper client if URL is available
-  if (supabaseUrl && supabaseAnonKey) {
-    console.log("Tentando conectar ao Supabase com URL:", supabaseUrl);
+if (isSimulationMode) {
+  console.log("Usando cliente Supabase simulado (modo de desenvolvimento/simulação)");
+  supabaseClient = mockSupabaseClient;
+} else {
+  try {
+    console.log("Conectando ao Supabase real com URL:", supabaseUrl);
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  } else {
-    console.log("Usando cliente Supabase simulado (URLs não encontradas)");
+  } catch (error) {
+    console.error("Erro ao inicializar Supabase real, usando mock:", error);
     supabaseClient = mockSupabaseClient;
   }
-} catch (error) {
-  console.error("Erro ao inicializar Supabase, usando mock:", error);
-  supabaseClient = mockSupabaseClient;
 }
 
 export const supabase = supabaseClient;
