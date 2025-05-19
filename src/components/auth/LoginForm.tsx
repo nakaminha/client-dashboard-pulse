@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,14 @@ const LoginForm = () => {
   const [senha, setSenha] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSimulationMode, setIsSimulationMode] = useState(false);
   const { login } = useAuth();
+
+  useEffect(() => {
+    // Verificar se está em modo de simulação
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    setIsSimulationMode(!supabaseUrl);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,20 +34,27 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      // Verifica se está em modo de desenvolvimento sem Supabase
-      const isDevMode = !import.meta.env.VITE_SUPABASE_URL;
-      
       await login(email, senha);
       
-      if (isDevMode) {
+      if (isSimulationMode) {
         toast.success('Login simulado realizado com sucesso! Redirecionando...');
       } else {
         toast.success('Login realizado com sucesso!');
       }
     } catch (error: any) {
       console.error('Erro no login:', error);
-      // Mensagem de erro mais amigável
-      toast.error(error.message || 'Falha ao realizar login. Verifique suas credenciais.');
+      
+      // Mensagens de erro mais específicas
+      if (error.message?.includes('fetch') || error.name === 'AuthRetryableFetchError') {
+        toast.error('Erro de conexão com o servidor. Verifique sua internet ou tente novamente mais tarde.');
+      } else if (isSimulationMode) {
+        // Em modo de simulação, mostrar erro mas permitir login mesmo assim
+        toast.error('Erro no login, mas usando modo de simulação para continuar');
+        login(email, senha, true); // Força o modo de simulação
+      } else {
+        // Outros erros de credenciais
+        toast.error(error.message || 'Falha ao realizar login. Verifique suas credenciais.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +68,7 @@ const LoginForm = () => {
         <CardTitle className="text-2xl font-bold text-center">Portal Admin</CardTitle>
         <CardDescription className="text-center">
           Entre com suas credenciais para acessar
-          {!import.meta.env.VITE_SUPABASE_URL && (
+          {isSimulationMode && (
             <div className="mt-2 text-amber-500 text-xs font-semibold">
               MODO DE SIMULAÇÃO ATIVO - Qualquer credencial irá funcionar
             </div>

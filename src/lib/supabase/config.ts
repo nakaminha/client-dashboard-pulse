@@ -102,7 +102,21 @@ const mockSupabaseClient = {
   }
 };
 
-// Create a proper client if URL is available, otherwise use the mock client
-export const supabase = supabaseUrl 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : mockSupabaseClient as any;
+// Try to create a proper client first, fall back to mock if fails or URL is missing
+let supabaseClient: any;
+
+try {
+  // Create a proper client if URL is available
+  if (supabaseUrl && supabaseAnonKey) {
+    console.log("Tentando conectar ao Supabase com URL:", supabaseUrl);
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.log("Usando cliente Supabase simulado (URLs não encontradas)");
+    supabaseClient = mockSupabaseClient;
+  }
+} catch (error) {
+  console.error("Erro ao inicializar Supabase, usando mock:", error);
+  supabaseClient = mockSupabaseClient;
+}
+
+export const supabase = supabaseClient;
