@@ -12,12 +12,13 @@ import {
   FileSpreadsheet,
   MessageCircle,
   Phone,
-  ClipboardList
+  ClipboardList,
+  LogOut
 } from 'lucide-react';
 
 const Sidebar = () => {
   const { pathname } = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -49,6 +50,21 @@ const Sidebar = () => {
               <span className="text-sm font-medium">Gerenciar Usuários</span>
             </Link>
           )}
+        </div>
+      </div>
+      
+      {/* Botão de logout no final do sidebar */}
+      <div className="px-3 py-2 mt-auto">
+        <div className="space-y-1">
+          <button
+            onClick={logout}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-zinc-600 transition-all hover:text-zinc-900 hover:bg-zinc-100"
+            )}
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-sm font-medium">Sair da Conta</span>
+          </button>
         </div>
       </div>
     </div>
