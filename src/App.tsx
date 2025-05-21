@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,10 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/layout/DashboardLayout";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import AcessoPendente from "./pages/AcessoPendente";
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import AcessoPendente from './pages/AcessoPendente';
+import GerenciarUsuarios from './pages/GerenciarUsuarios';
 import Clientes from "./pages/Clientes";
 import NotFound from "./pages/NotFound";
 import Financeiro from "./pages/Financeiro";
